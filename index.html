@@ -202,8 +202,18 @@
         #startup-notice p {
             color: #2c3e50;
             line-height: 1.6;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-size: 1.1em;
+        }
+        
+        #startup-notice .music-tip {
+            color: #e74c3c;
+            font-weight: bold;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #e74c3c;
         }
         
         #startup-notice button {
@@ -225,9 +235,99 @@
             background: linear-gradient(135deg, #2980b9, #3498db);
         }
         
+        /* ===== 音乐控制按钮 ===== */
+        #music-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            border: 2px solid #3498db;
+            transition: all 0.3s ease;
+        }
+
+        #music-control:hover {
+            transform: scale(1.1);
+            background: rgba(52, 152, 219, 0.95);
+            color: white;
+        }
+
+        #music-control .icon {
+            font-size: 24px;
+        }
+        
+        /* 音乐播放时的状态 */
+        #music-control.playing {
+            background: rgba(46, 204, 113, 0.95);
+            border-color: #2ecc71;
+        }
+        
+        /* 音乐引导动画 */
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+            50% { transform: scale(1.2); box-shadow: 0 0 25px #e74c3c, 0 0 35px #e74c3c; }
+            100% { transform: scale(1); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+        }
+
+        .music-pulse {
+            animation: pulse 1.5s infinite;
+            border-color: #e74c3c !important;
+        }
+        
+        /* 音乐音量控制面板 */
+        #volume-control {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            width: 150px;
+            display: none;
+            border: 2px solid #3498db;
+        }
+        
+        #volume-control.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        
+        #volume-control h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        #volume-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         /* ===== 移动端适配 ===== */
@@ -275,6 +375,23 @@
                 font-size: 1em;
             }
             
+            #music-control {
+                width: 45px;
+                height: 45px;
+                top: 15px;
+                right: 15px;
+            }
+            
+            #music-control .icon {
+                font-size: 20px;
+            }
+            
+            #volume-control {
+                top: 70px;
+                right: 15px;
+                width: 130px;
+            }
+            
             /* 移动端触摸优化 */
             #threejs-container {
                 touch-action: none;
@@ -317,7 +434,10 @@
     <!-- 启动提示窗口 -->
     <div id="startup-notice">
         <h2>⚠️ 温馨提示</h2>
-        <p>本作品为深圳中学全景导览系统<br>由于技术原因，部分图片可能存在错位情况<br>敬请谅解！</p>
+        <p>本作品为深圳中学全景导览系统<br>由于技术原因，部分图片可能存在错位情况,敬请谅解！<br>欢迎大家来寻找校园里的彩蛋</p>
+        <div class="music-tip">
+            🎵 <strong>小提示：</strong>探索时别忘了点击右上角的🔇按钮开启背景音乐！
+        </div>
         <button onclick="closeStartupNotice()">我已知晓，开始探索</button>
     </div>
     
@@ -338,6 +458,17 @@
             </div>
         </div>
         
+        <!-- 音乐控制按钮 -->
+        <div id="music-control" onclick="toggleMusic()">
+            <div class="icon">🔇</div>
+        </div>
+        
+        <!-- 音量控制面板 -->
+        <div id="volume-control">
+            <h3>音量调节</h3>
+            <input type="range" id="volume-slider" min="0" max="100" value="50">
+        </div>
+        
         <!-- 3D地图容器 -->
         <div id="threejs-container"></div>
         
@@ -356,6 +487,13 @@
         </div>
     </div>
 
+    <!-- 隐藏的音乐播放器 -->
+    <audio id="background-music" loop preload="auto">
+        <!-- 使用更兼容的音乐源 -->
+        <source src="恭喜发财--刘德华.mp3" type="audio/mpeg">
+        您的浏览器不支持音频播放
+    </audio>
+
     <script>
         // ===== 全局变量定义 =====
         let scene, camera, renderer, controls;
@@ -364,6 +502,15 @@
         let panoramaViewer = null;
         let gltfLoader = null;
         let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // ===== 音乐控制相关变量 =====
+        let isMusicPlaying = false;
+        let backgroundMusic = document.getElementById('background-music');
+        let volumeSlider = document.getElementById('volume-slider');
+        let volumeControl = document.getElementById('volume-control');
+        let isVolumeControlVisible = false;
+        let hideVolumeTimeout = null;
+        let hasUserInteracted = false;
 
         // ===== 学校建筑配置 =====
         const buildings = [
@@ -379,7 +526,6 @@
         ];
 
         // ===== 独立的交互点配置 =====
-        // 注意：已将所有green改为cyan
         const interactionPoints = [
             {
                 id: 'cyan1',
@@ -784,9 +930,176 @@
             }
         ];
 
+        // ===== 音乐控制函数 =====
+        function initMusicControl() {
+            // 设置初始音量
+            backgroundMusic.volume = 0.5;
+            volumeSlider.value = 50;
+            
+            // 音量滑块事件
+            volumeSlider.addEventListener('input', function() {
+                backgroundMusic.volume = this.value / 100;
+                resetVolumeTimeout();
+            });
+            
+            // 鼠标进入音量控制区域时显示
+            volumeControl.addEventListener('mouseenter', function() {
+                clearTimeout(hideVolumeTimeout);
+                isVolumeControlVisible = true;
+            });
+            
+            // 鼠标离开音量控制区域时隐藏
+            volumeControl.addEventListener('mouseleave', function() {
+                startVolumeHideTimeout();
+            });
+            
+            // 音乐播放器事件监听
+            backgroundMusic.addEventListener('play', function() {
+                updateMusicIcon(true);
+            });
+            
+            backgroundMusic.addEventListener('pause', function() {
+                updateMusicIcon(false);
+            });
+            
+            // 错误处理
+            backgroundMusic.addEventListener('error', function(e) {
+                console.error('音乐加载错误:', e);
+                alert('背景音乐加载失败，请检查网络连接或更换浏览器');
+            });
+            
+            // 添加全局点击监听，标记用户已交互
+            document.addEventListener('click', function() {
+                hasUserInteracted = true;
+            }, { once: true });
+        }
+
+        function toggleMusic() {
+            if (isMusicPlaying) {
+                // 暂停音乐
+                backgroundMusic.pause();
+                isMusicPlaying = false;
+                updateMusicIcon(false);
+                console.log('⏸️ 音乐已暂停');
+            } else {
+                // 播放音乐（确保有用户交互）
+                tryPlayMusic();
+            }
+            
+            // 显示/隐藏音量控制
+            toggleVolumeControl();
+        }
+
+        function tryPlayMusic() {
+            const playPromise = backgroundMusic.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    // 播放成功
+                    isMusicPlaying = true;
+                    updateMusicIcon(true);
+                    console.log('✅ 音乐播放成功');
+                    removeMusicGuide();
+                }).catch(error => {
+                    // 播放失败
+                    console.error('❌ 音乐播放失败:', error);
+                    showMusicPlayError();
+                    isMusicPlaying = false;
+                    updateMusicIcon(false);
+                });
+            }
+        }
+
+        function toggleVolumeControl() {
+            if (!isVolumeControlVisible) {
+                volumeControl.classList.add('show');
+                isVolumeControlVisible = true;
+                resetVolumeTimeout();
+            } else {
+                startVolumeHideTimeout();
+            }
+        }
+
+        function resetVolumeTimeout() {
+            clearTimeout(hideVolumeTimeout);
+            hideVolumeTimeout = setTimeout(() => {
+                if (isVolumeControlVisible) {
+                    volumeControl.classList.remove('show');
+                    isVolumeControlVisible = false;
+                }
+            }, 3000);
+        }
+
+        function startVolumeHideTimeout() {
+            clearTimeout(hideVolumeTimeout);
+            hideVolumeTimeout = setTimeout(() => {
+                volumeControl.classList.remove('show');
+                isVolumeControlVisible = false;
+            }, 1000);
+        }
+
+        function updateMusicIcon(playing) {
+            const icon = document.querySelector('#music-control .icon');
+            const musicControl = document.getElementById('music-control');
+            
+            if (playing) {
+                icon.textContent = '🔊';
+                musicControl.classList.add('playing');
+                musicControl.title = '点击关闭背景音乐';
+                musicControl.classList.remove('music-pulse');
+            } else {
+                icon.textContent = '🔇';
+                musicControl.classList.remove('playing');
+                musicControl.title = '点击开启背景音乐';
+            }
+        }
+
+        function showMusicPlayError() {
+            // 添加视觉引导
+            const musicControl = document.getElementById('music-control');
+            musicControl.classList.add('music-pulse');
+            
+            // 显示提示信息
+            setTimeout(() => {
+                alert('音乐播放被浏览器阻止。\n请尝试：\n1. 刷新页面后重新点击音乐按钮\n2. 检查浏览器是否允许自动播放\n3. 更换Chrome或Edge浏览器');
+            }, 500);
+        }
+
+        function addMusicGuide() {
+            // 5秒后如果音乐还没播放，添加引导动画
+            setTimeout(() => {
+                if (!isMusicPlaying) {
+                    const musicControl = document.getElementById('music-control');
+                    musicControl.classList.add('music-pulse');
+                    musicControl.title = '点击这里开启背景音乐！';
+                    
+                    console.log('🎵 添加音乐引导动画');
+                }
+            }, 5000);
+        }
+
+        function removeMusicGuide() {
+            const musicControl = document.getElementById('music-control');
+            musicControl.classList.remove('music-pulse');
+        }
+
         // ===== 启动提示窗口函数 =====
         function closeStartupNotice() {
             document.getElementById('startup-notice').style.display = 'none';
+            
+            // 用户点击"我已知晓"后，标记为已交互并尝试播放音乐
+            hasUserInteracted = true;
+            
+            // 尝试自动播放音乐
+            setTimeout(() => {
+                if (!isMusicPlaying) {
+                    console.log('🎵 尝试自动播放音乐...');
+                    tryPlayMusic();
+                }
+            }, 500);
+            
+            // 添加音乐引导（如果自动播放失败）
+            addMusicGuide();
         }
 
         // ===== 初始化函数 =====
@@ -858,6 +1171,9 @@
             window.addEventListener('resize', onWindowResize);
             window.addEventListener('click', onMouseClick);
             window.addEventListener('touchstart', onTouchStart, { passive: false });
+            
+            // 初始化音乐控制
+            initMusicControl();
             
             // 开始动画循环
             animate();
@@ -1103,7 +1419,7 @@
                 raycaster.setFromCamera(mouse, camera);
                 const intersects = raycaster.intersectObjects(scene.children);
                 
-                for (let i = 0; i < intersects.length; i++) {
+                for (let i = 0; i <intersects.length; i++) {
                     const object = intersects[i].object;
                     const userData = object.userData;
                     
@@ -1146,11 +1462,11 @@
                     "hfov": 100,
                     "hotSpots": [
                         {
-                            "pitch": 0,
-                            "yaw": 0,
+                            "pitch": -2,
+                            "yaw": 190,
                             "type": "info",
                             "text": pointData.description,
-                            "cssClass": "custom-hotspot"
+                            "clickHandlerFunc": exitPanoramaMode
                         },
                         {
                             "pitch": -2,
@@ -1248,6 +1564,4 @@
         window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
-
 </html>
-
