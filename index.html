@@ -1147,7 +1147,9 @@
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
-            
+            controls.minDistance = 30;   // 最小缩放距离（不能更近）
+            controls.maxDistance = 300;  // 最大缩放距离（不能更远）
+            controls.enableZoom = true;  // 确保缩放功能开启（默认就是true）
             // 移动端触摸优化
             if (isMobile) {
                 controls.enablePan = false;
@@ -1565,5 +1567,6 @@
     </script>
 </body>
 </html>
+
 
 
